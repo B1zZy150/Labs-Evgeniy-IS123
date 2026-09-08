@@ -8,7 +8,7 @@ import (
 
 func main() {
 	counts := make(map[string]int)
-	filesByLine := make(map[string]map[string]struct{}) //1.4
+	filesByLine := make(map[string]map[string]struct{}) //1.4 вроде правильно
 
 	files := os.Args[1:]
 	if len(files) == 0 {
