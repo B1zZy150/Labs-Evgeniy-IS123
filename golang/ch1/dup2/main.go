@@ -8,9 +8,11 @@ import (
 
 func main() {
 	counts := make(map[string]int)
+	filesByLine := make(map[string]map[string]struct{}) //1.4
+
 	files := os.Args[1:]
 	if len(files) == 0 {
-		countLines(os.Stdin, counts)
+		countLines(os.Stdin, "stdin", counts, filesByLine)
 	} else {
 		for _, arg := range files {
 			f, err := os.Open(arg)
@@ -18,20 +20,31 @@ func main() {
 				fmt.Fprintf(os.Stderr, "dup2: %v\n", err)
 				continue
 			}
-			countLines(f, counts)
+			countLines(f, arg, counts, filesByLine)
 			f.Close()
 		}
 	}
 	for line, n := range counts {
 		if n > 1 {
-			fmt.Printf("%d\t%s\n", n, line)
+			var fileList []string
+			for file := range filesByLine[line] {
+				fileList = append(fileList, file)
+			}
+			fmt.Printf("%d\t%s\t%v\n", n, line, fileList)
 		}
 	}
 }
 
-func countLines(f *os.File, counts map[string]int) {
+func countLines(f *os.File, filename string, counts map[string]int, filesByLine map[string]map[string]struct{}) {
 	input := bufio.NewScanner(f)
 	for input.Scan() {
-		counts[input.Text()]++
+		line := input.Text()
+
+		counts[line]++
+
+		if filesByLine[line] == nil {
+			filesByLine[line] = make(map[string]struct{})
+		}
+		filesByLine[line][filename] = struct{}{}
 	}
 }
